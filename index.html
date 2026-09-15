@@ -159,6 +159,20 @@
   }
   .icon-btn svg { width: 16px; height: 16px; }
 
+  /* ── Pull to refresh ──────────────────────────── */
+  .ptr {
+    position: fixed; left: 0; right: 0;
+    top: calc(var(--header-h) + var(--safe-top));
+    height: 0; overflow: hidden; z-index: 99;
+    display: flex; align-items: flex-end; justify-content: center;
+    pointer-events: none;
+  }
+  .ptr span {
+    font-family: 'IBM Plex Mono'; font-size: 11px; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--ink-muted);
+    padding-bottom: 8px; white-space: nowrap;
+  }
+
   /* ── Shell ────────────────────────────────────── */
   .main {
     padding-top: calc(var(--header-h) + var(--safe-top));
@@ -525,6 +539,8 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
   </button>
 </header>
+
+<div class="ptr" id="ptr" aria-hidden="true"><span id="ptr-label">Pull to refresh</span></div>
 
 <main class="main">
 
@@ -1457,14 +1473,68 @@
 </script>
 
 <script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function () {
-    navigator.serviceWorker.register('service-worker.js');
+(function () {
+  var hadController = false;
+
+  function checkForUpdate() {
+    if (!('serviceWorker' in navigator)) return Promise.resolve();
+    return navigator.serviceWorker.getRegistration()
+      .then(function (reg) { return reg ? reg.update() : null; })
+      .catch(function () {});
+  }
+
+  if ('serviceWorker' in navigator) {
+    hadController = !!navigator.serviceWorker.controller;
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('service-worker.js');
+    });
+    navigator.serviceWorker.addEventListener('message', function (e) {
+      // Skip the very first install, which activates with nothing to replace.
+      if (e.data === 'SW_UPDATED' && hadController) window.location.reload();
+    });
+    // Standalone apps are suspended rather than closed, so re-check on foreground.
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible') checkForUpdate();
+    });
+  }
+
+  // iOS standalone has no browser chrome, so no built-in pull-to-refresh.
+  var TRIGGER = 72, MAX = 96;
+  var ptr = document.getElementById('ptr');
+  var label = document.getElementById('ptr-label');
+  var startY = null, dist = 0, busy = false;
+
+  function reset() { startY = null; dist = 0; ptr.style.height = '0px'; }
+
+  document.addEventListener('touchstart', function (e) {
+    if (busy || e.touches.length !== 1 || window.scrollY > 0) { startY = null; return; }
+    startY = e.touches[0].clientY;
+    dist = 0;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', function (e) {
+    if (startY === null || busy) return;
+    var d = e.touches[0].clientY - startY;
+    if (window.scrollY > 0) { reset(); return; }
+    // Easing back up collapses the indicator but keeps the gesture alive, so a
+    // wiggle (or a zero-delta first move) doesn't cancel the pull.
+    if (d <= 0) { dist = 0; ptr.style.height = '0px'; return; }
+    dist = Math.min(d * 0.5, MAX);
+    ptr.style.height = dist + 'px';
+    label.textContent = dist >= TRIGGER ? 'Release to refresh' : 'Pull to refresh';
+  }, { passive: true });
+
+  document.addEventListener('touchend', function () {
+    if (startY === null || busy) return;
+    var go = dist >= TRIGGER;
+    startY = null;
+    if (!go) { reset(); return; }
+    busy = true;
+    label.textContent = 'Refreshing…';
+    ptr.style.height = '44px';
+    checkForUpdate().then(function () { window.location.reload(); });
   });
-  navigator.serviceWorker.addEventListener('message', function (e) {
-    if (e.data === 'SW_UPDATED') window.location.reload();
-  });
-}
+})();
 </script>
 </body>
 </html>

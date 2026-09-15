@@ -87,6 +87,21 @@ These actions are pre-approved:
   script sets from `navigator.standalone` (iOS home-screen launches don't reliably match
   the media query).
 
+## Updating an installed copy
+
+iOS standalone has no browser chrome, so there is no built-in pull-to-refresh and no
+address bar to reload from. Two paths get new code into an installed app:
+
+- The page implements its own pull-to-refresh (see the last `<script>` in `index.html`),
+  which calls `registration.update()` and then reloads.
+- On foreground (`visibilitychange`), the page re-checks for a service worker update.
+  When one activates it posts `SW_UPDATED` and the page reloads itself.
+
+Both depend on `CACHE` in `service-worker.js` changing — the browser only notices an
+update when the worker's own bytes differ. **Bump it on every deploy or installed copies
+will never update.** The `SW_UPDATED` reload is skipped on first install, when there is
+no previous worker to replace.
+
 ## Shared framework reference
 
 For implementation patterns, read the relevant doc from `~/Projects/kepando-dev/docs/`:
