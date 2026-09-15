@@ -33,6 +33,7 @@ between an event and today).
       "precision": "day",
       "category": "home",
       "title": "Bought our current home",
+      "location": "Portland, OR",
       "note": "Five days of living out of boxes in between."
     }
   ]
@@ -43,6 +44,9 @@ between an event and today).
   controls how it is displayed and how much of it is meaningful. A `year` entry stores
   `YYYY-01-01` and renders as just the year.
 - Day of the week is shown only for `day` precision.
+- `location` is a free-text string, optional, and absent entirely on events created
+  before it existed — read it as `ev.location || ''` and render it only when non-empty.
+  It is plain text with no geocoding. `dateLine()` composes it onto the date.
 - `category` is one of: `home`, `career`, `family`, `milestone`, `health`, `travel`.
   Category colors are CSS custom properties named `--c-{category}`, defined for both
   light and dark themes.

@@ -627,6 +627,11 @@
       </div>
 
       <div class="field">
+        <label for="f-location">Where <span style="font-weight:400;color:var(--ink-muted)">(optional)</span></label>
+        <input type="text" id="f-location" placeholder="Dover, DE" autocomplete="off">
+      </div>
+
+      <div class="field">
         <label>Part of life</label>
         <div class="cat-grid" id="cat-grid" role="group" aria-label="Category"></div>
       </div>
@@ -702,7 +707,7 @@
 (function () {
   "use strict";
 
-  const LAST_UPDATED = '09/14/2026 08:56 PM PDT';
+  const LAST_UPDATED = '09/14/2026 09:29 PM PDT';
 
   const APP_NAME = 'MyJourney';
 
@@ -768,6 +773,10 @@
     if (ev.precision === 'year') return String(p.y);
     if (ev.precision === 'month') return MONTHS[p.m - 1] + ' ' + p.y;
     return MONTHS[p.m - 1] + ' ' + p.d + ', ' + p.y;
+  }
+
+  function dateLine(ev) {
+    return ev.location ? fmtLong(ev) + ' · ' + esc(ev.location) : fmtLong(ev);
   }
 
   function fmtLong(ev) {
@@ -888,7 +897,7 @@
           '<span class="ev-age">Age ' + ageAt(ev.date) + '</span>' +
         '</div>' +
         '<div class="ev-title">' + esc(ev.title) + '</div>' +
-        '<div class="ev-date mono">' + fmtLong(ev) + '</div>';
+        '<div class="ev-date mono">' + dateLine(ev) + '</div>';
       if (ev.note) html += '<p class="ev-note">' + esc(ev.note) + '</p>';
       toggle.innerHTML = html;
       toggle.addEventListener('click', function () {
@@ -1042,7 +1051,7 @@
       '<div class="readout" style="--cat:' + CATS[ev.category].color + '">' +
         '<span class="cat-tag">' + CATS[ev.category].label + '</span>' +
         '<div class="ev-title">' + esc(ev.title) + '</div>' +
-        '<div class="ev-date mono">' + fmtLong(ev) + ' · age ' + ageAt(ev.date) + ' · ' + phrase(ago, { days: true }) + ' ago</div>' +
+        '<div class="ev-date mono">' + dateLine(ev) + ' · age ' + ageAt(ev.date) + ' · ' + phrase(ago, { days: true }) + ' ago</div>' +
         (ev.note ? '<p class="ev-note">' + esc(ev.note) + '</p>' : '') +
         '<div style="margin-top:10px"><button type="button" class="link-btn" id="rail-edit">' + EDIT_ICON + 'Edit</button></div>' +
       '</div>';
@@ -1109,11 +1118,12 @@
     }
 
     const note = document.getElementById('f-note').value.trim();
+    const location = document.getElementById('f-location').value.trim();
 
     if (editingId) {
       const ev = events.filter(function (x) { return x.id === editingId; })[0];
       ev.date = iso; ev.precision = fPrecision; ev.category = fCategory;
-      ev.title = title; ev.note = note;
+      ev.title = title; ev.note = note; ev.location = location;
       openId = ev.id;
       selStation = ev.id;
     } else {
@@ -1123,7 +1133,8 @@
         precision: fPrecision,
         category: fCategory,
         title: title,
-        note: note
+        note: note,
+        location: location
       });
     }
     save();
@@ -1173,6 +1184,7 @@
     }
     document.getElementById('f-title').value = ev.title;
     document.getElementById('f-note').value = ev.note || '';
+    document.getElementById('f-location').value = ev.location || '';
     renderCatGrid();
     renderAddChrome();
     show('add');
