@@ -79,6 +79,13 @@ These actions are pre-approved:
 - `[hidden] { display: none !important; }` is load-bearing. Several elements that toggle
   with the `hidden` attribute also carry `display: flex`, which would otherwise win.
 - Bump `CACHE` in `service-worker.js` on each deploy to bust stale caches.
+- Top spacing goes through `--safe-top`, never `env(safe-area-inset-top)` directly. The
+  status bar is `black-translucent`, so the page draws under it, but iPad in standalone
+  mode reports a zero top inset — the header ends up beneath the clock. `--safe-top`
+  floors the inset at 32px when installed, triggered by both
+  `@media (display-mode: standalone)` and a `data-standalone` attribute that a head
+  script sets from `navigator.standalone` (iOS home-screen launches don't reliably match
+  the media query).
 
 ## Shared framework reference
 
