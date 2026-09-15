@@ -23,18 +23,19 @@ duration questions get answered: *have we lived in this house longer than the la
 
 ## Setup
 
-1. **Azure app registration.** The app uses the shared **KenApps-Common** registration
-   (scopes `User.Read`, `Files.ReadWrite`). Add this app's redirect URIs to it:
-   - `https://kepando.github.io/my-journey/`
-   - `http://localhost:5500/` (or whatever port you test on)
+1. **Azure app registration.** This app has its own registration named **my-journey**
+   (client ID `28c3fed0-036e-4cf5-8aaa-851c39f2a26c`), rather than using the shared
+   KenApps-Common one. It must be configured as:
+   - **Supported account types**: Personal Microsoft accounts only — the app signs in
+     against the `consumers` authority, so a single-tenant ("My organization only")
+     registration will reject every sign-in
+   - **Platform**: Single-page application (SPA)
+   - **Redirect URIs**: `https://kepando.github.io/my-journey/` and
+     `http://localhost:5500/` (or whatever port you test on)
+   - **API permissions**: `User.Read`, `Files.ReadWrite`
 
-2. **Client ID.** Replace the placeholder in `index.html`:
-
-   ```javascript
-   const CONFIG = {
-     clientId: 'REPLACE_WITH_KENAPPS_COMMON_CLIENT_ID',
-     ...
-   ```
+2. **Client ID.** Already set in `index.html`. If the registration is ever replaced,
+   update `CONFIG.clientId`.
 
 3. **Birth date.** Set near the top of the script in `index.html`. Every age and the start
    of the horizontal axis derive from it.
