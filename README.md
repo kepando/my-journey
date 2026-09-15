@@ -24,7 +24,7 @@ duration questions get answered: *have we lived in this house longer than the la
 ## Setup
 
 1. **Azure app registration.** This app has its own registration named **my-journey**
-   (client ID `28c3fed0-036e-4cf5-8aaa-851c39f2a26c`), rather than using the shared
+   (client ID `bace7e07-292c-4155-897b-06c0ecd9aeca`), rather than using the shared
    KenApps-Common one. It must be configured as:
    - **Supported account types**: Personal Microsoft accounts only — the app signs in
      against the `consumers` authority, so a single-tenant ("My organization only")
