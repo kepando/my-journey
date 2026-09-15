@@ -102,6 +102,17 @@ These actions are pre-approved:
   without testing on an iPad.
 - Top spacing still goes through `--safe-top` rather than `env(safe-area-inset-top)`
   directly, so there is one knob if this ever needs adjusting.
+- **The document does not scroll — `.main` does.** `html` and `body` are
+  `overflow: hidden`, and `.main` is a fixed, full-bleed `overflow-y: auto` container
+  between the header and the bottom nav. This is deliberate: iPadOS 26 draws a "scroll
+  edge effect" (a blur-and-dim band) over the top of the *main scroll view* in installed
+  web apps, which faded out the header. Confirmed by loading the same URL side by side —
+  crisp in a Safari tab, faded in the home-screen app — after ruling the page out
+  (opaque header, no backdrop-filter, no mask, identical render in a desktop browser).
+  Anything reading or setting scroll position must use `#main`, not `window`; the
+  pull-to-refresh gesture reads `scroller.scrollTop`. Note `#app` is consequently a
+  zero-height wrapper, since all three of its children are fixed — assert on `.header`
+  or `#main`, never on `#app`'s box.
 - The header and bottom nav are **opaque**. They were translucent with a backdrop blur,
   which let content scrolling underneath bleed through and read as the top of the screen
   fading out. Don't reintroduce transparency there without checking it on a device.

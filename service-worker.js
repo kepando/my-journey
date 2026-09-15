@@ -1,4 +1,4 @@
-const CACHE = 'myjourney-v6';
+const CACHE = 'myjourney-v7';
 const CACHE_URLS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {

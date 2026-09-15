@@ -93,9 +93,9 @@
     --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 16px -8px rgba(0,0,0,.6);
   }
 
-  html { height: 100%; }
+  html { height: 100%; overflow: hidden; }
   body {
-    min-height: 100%;
+    height: 100%; overflow: hidden;
     background: var(--ground);
     color: var(--ink);
     font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -168,8 +168,15 @@
   }
 
   /* ── Shell ────────────────────────────────────── */
+  /* The timeline scrolls inside this element rather than the document, so the
+     page itself is not the main scroll view. See the scroll edge note in CLAUDE.md. */
   .main {
-    padding-top: calc(var(--header-h) + var(--safe-top));
+    position: fixed;
+    top: calc(var(--header-h) + var(--safe-top));
+    bottom: 0; left: 0; right: 0;
+    overflow-y: auto; overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
     padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 8px);
   }
   .view { max-width: 460px; margin: 0 auto; padding: 20px 16px 8px; }
@@ -527,7 +534,7 @@
     }
     .nav-btn[aria-current="page"] { background: var(--accent-soft); }
     .header { left: 0; z-index: 101; }
-    .main { margin-left: 226px; padding-bottom: 24px; }
+    .main { left: 226px; padding-bottom: 24px; }
     .view { max-width: 720px; padding: 32px 32px 8px; }
     .view#view-rail { max-width: 940px; }
   }
@@ -571,7 +578,7 @@
 
 <div class="ptr" id="ptr" aria-hidden="true"><span id="ptr-label">Pull to refresh</span></div>
 
-<main class="main">
+<main class="main" id="main">
 
   <!-- ── Vertical timeline ── -->
   <section class="view" id="view-vertical">
@@ -754,7 +761,7 @@
 (function () {
   "use strict";
 
-  const LAST_UPDATED = '09/14/2026 10:03 PM PDT';
+  const LAST_UPDATED = '09/14/2026 10:13 PM PDT';
 
   const APP_NAME = 'MyJourney';
 
@@ -1452,7 +1459,7 @@
     });
     document.getElementById('view-toggle').style.visibility =
       (name === 'vertical' || name === 'rail') ? 'visible' : 'hidden';
-    window.scrollTo(0, 0);
+    document.getElementById('main').scrollTop = 0;
   }
 
   document.getElementById('nav').addEventListener('click', function (e) {
@@ -1776,6 +1783,7 @@
 
   // iOS standalone has no browser chrome, so no built-in pull-to-refresh.
   var TRIGGER = 72, MAX = 96;
+  var scroller = document.getElementById('main');
   var ptr = document.getElementById('ptr');
   var label = document.getElementById('ptr-label');
   var startY = null, dist = 0, busy = false;
@@ -1783,7 +1791,7 @@
   function reset() { startY = null; dist = 0; ptr.style.height = '0px'; }
 
   document.addEventListener('touchstart', function (e) {
-    if (busy || e.touches.length !== 1 || window.scrollY > 0) { startY = null; return; }
+    if (busy || e.touches.length !== 1 || scroller.scrollTop > 0) { startY = null; return; }
     startY = e.touches[0].clientY;
     dist = 0;
   }, { passive: true });
@@ -1791,7 +1799,7 @@
   document.addEventListener('touchmove', function (e) {
     if (startY === null || busy) return;
     var d = e.touches[0].clientY - startY;
-    if (window.scrollY > 0) { reset(); return; }
+    if (scroller.scrollTop > 0) { reset(); return; }
     // Easing back up collapses the indicator but keeps the gesture alive, so a
     // wiggle (or a zero-delta first move) doesn't cancel the pull.
     if (d <= 0) { dist = 0; ptr.style.height = '0px'; return; }
