@@ -34,6 +34,7 @@ between an event and today).
       "category": "home",
       "title": "Bought our current home",
       "location": "Portland, OR",
+      "photo": "u1724567890123.jpg",
       "note": "Five days of living out of boxes in between."
     }
   ]
@@ -47,6 +48,14 @@ between an event and today).
 - `location` is a free-text string, optional, and absent entirely on events created
   before it existed — read it as `ev.location || ''` and render it only when non-empty.
   It is plain text with no geocoding. `dateLine()` composes it onto the date.
+- `photo` is a filename in `/MyJourney/photos/`, named `{event id}.jpg`, and optional in
+  the same way `location` is. Images are downscaled to a 1600px long edge and
+  re-encoded as JPEG in the browser before upload, so phone-sized originals are not
+  stored. The file is deleted when the photo is cleared or the event is deleted.
+  Thumbnails and full views come from Graph's pre-authenticated URLs (`/thumbnails/0/small`
+  and `@microsoft.graph.downloadUrl`) so they can be used as a plain `<img src>` with no
+  Authorization header; they expire after about an hour, which is why `photoUrls` caches
+  per session rather than persisting.
 - `category` is one of: `home`, `career`, `family`, `milestone`, `health`, `travel`.
   Category colors are CSS custom properties named `--c-{category}`, defined for both
   light and dark themes.
@@ -93,7 +102,9 @@ These actions are pre-approved:
   without testing on an iPad.
 - Top spacing still goes through `--safe-top` rather than `env(safe-area-inset-top)`
   directly, so there is one knob if this ever needs adjusting.
-- `backdrop-filter` needs the `-webkit-` prefix alongside it for older Safari.
+- The header and bottom nav are **opaque**. They were translucent with a backdrop blur,
+  which let content scrolling underneath bleed through and read as the top of the screen
+  fading out. Don't reintroduce transparency there without checking it on a device.
 
 ## Updating an installed copy
 

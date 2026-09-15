@@ -117,9 +117,7 @@
     padding-left: max(16px, env(safe-area-inset-left));
     padding-right: max(16px, env(safe-area-inset-right));
     display: flex; align-items: center; gap: 12px;
-    background: color-mix(in srgb, var(--surface) 88%, transparent);
-    -webkit-backdrop-filter: saturate(1.4) blur(12px);
-    backdrop-filter: saturate(1.4) blur(12px);
+    background: var(--surface);
     border-bottom: 1px solid var(--rule);
   }
   .brand { display: flex; align-items: baseline; gap: 8px; margin-right: auto; min-width: 0; }
@@ -182,9 +180,7 @@
     height: calc(var(--nav-h) + env(safe-area-inset-bottom));
     padding-bottom: env(safe-area-inset-bottom);
     display: flex; justify-content: space-around; align-items: center;
-    background: color-mix(in srgb, var(--surface) 92%, transparent);
-    -webkit-backdrop-filter: saturate(1.4) blur(12px);
-    backdrop-filter: saturate(1.4) blur(12px);
+    background: var(--surface);
     border-top: 1px solid var(--rule);
   }
   .nav-btn {
@@ -244,11 +240,41 @@
     border-radius: 12px;
     box-shadow: var(--shadow);
   }
+  .ev-row { display: flex; align-items: flex-start; }
   .ev-toggle {
-    display: block; width: 100%; text-align: left; font: inherit; color: inherit;
+    flex: 1; min-width: 0;
+    display: block; text-align: left; font: inherit; color: inherit;
     background: none; border: none; cursor: pointer; padding: 12px 14px;
     border-radius: 12px;
   }
+  .ev-aside {
+    flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+    padding: 12px 14px 12px 0;
+  }
+  .ev-thumb {
+    padding: 0; border: 1px solid var(--rule); background: var(--surface-2);
+    border-radius: 9px; overflow: hidden; cursor: pointer;
+    width: 46px; height: 46px; flex: none; line-height: 0;
+  }
+  .ev-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .lightbox {
+    position: fixed; inset: 0; z-index: 300;
+    background: rgba(8, 12, 17, .93);
+    display: flex; align-items: center; justify-content: center;
+    padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
+  }
+  .lightbox img {
+    max-width: 100%; max-height: 100%; object-fit: contain;
+    border-radius: 10px; display: block;
+  }
+  .lightbox-close {
+    position: absolute; top: calc(12px + env(safe-area-inset-top)); right: 16px;
+    width: 40px; height: 40px; border-radius: 999px; cursor: pointer;
+    border: 1px solid rgba(255,255,255,.28); background: rgba(0,0,0,.45);
+    color: #fff; font-size: 22px; line-height: 1; display: grid; place-items: center;
+  }
+  .lightbox-msg { color: rgba(255,255,255,.75); font-size: 14px; }
   .ev-more {
     margin: 0 14px; padding: 9px 0 12px;
     border-top: 1px dashed var(--rule);
@@ -400,6 +426,20 @@
     border-radius: 9px; padding: 9px 12px; font-size: 13px; color: var(--ink);
   }
 
+  .photo-pick { display: flex; align-items: center; gap: 12px; }
+  .photo-preview {
+    width: 64px; height: 64px; border-radius: 10px; flex: none;
+    border: 1px solid var(--rule); background: var(--surface-2);
+    overflow: hidden; line-height: 0;
+    display: grid; place-items: center;
+  }
+  .photo-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo-preview span {
+    font-family: 'IBM Plex Mono'; font-size: 9px; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--ink-muted); line-height: 1.3; text-align: center;
+  }
+  .photo-actions { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+
   .form-note {
     font-size: 12.5px; color: var(--ink-muted); margin-top: 12px;
     padding: 10px 12px; background: var(--surface-2); border-radius: 9px; border: 1px solid var(--rule);
@@ -478,7 +518,7 @@
       flex-direction: column; justify-content: flex-start; align-items: stretch;
       gap: 4px; padding: calc(var(--header-h) + 20px) 14px 20px;
       border-top: none; border-right: 1px solid var(--rule);
-      -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--surface);
+      background: var(--surface);
     }
     .nav-btn {
       flex-direction: row; justify-content: flex-start; gap: 11px;
@@ -626,6 +666,18 @@
       </div>
 
       <div class="field">
+        <label>Photo <span style="font-weight:400;color:var(--ink-muted)">(optional)</span></label>
+        <div class="photo-pick">
+          <div class="photo-preview" id="photo-preview"><span>No photo</span></div>
+          <div class="photo-actions">
+            <button type="button" class="link-btn" id="photo-choose">Choose a photo</button>
+            <button type="button" class="link-btn" id="photo-clear" hidden>Remove photo</button>
+          </div>
+        </div>
+        <input type="file" id="f-photo" accept="image/*" hidden>
+      </div>
+
+      <div class="field">
         <label for="f-note">Anything worth remembering <span style="font-weight:400;color:var(--ink-muted)">(optional)</span></label>
         <textarea id="f-note" placeholder="Five days of living out of boxes in between."></textarea>
       </div>
@@ -687,6 +739,12 @@
   </button>
 </nav>
 
+<div class="lightbox" id="lightbox" hidden>
+  <img id="lightbox-img" alt="">
+  <p class="lightbox-msg" id="lightbox-msg" hidden>Loading…</p>
+  <button type="button" class="lightbox-close" id="lightbox-close" aria-label="Close photo">&times;</button>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 </div>
@@ -696,7 +754,7 @@
 (function () {
   "use strict";
 
-  const LAST_UPDATED = '09/14/2026 09:41 PM PDT';
+  const LAST_UPDATED = '09/14/2026 10:03 PM PDT';
 
   const APP_NAME = 'MyJourney';
 
@@ -883,7 +941,6 @@
       let html =
         '<div class="ev-top">' +
           '<span class="cat-tag">' + CATS[ev.category].label + '</span>' +
-          '<span class="ev-age">Age ' + ageAt(ev.date) + '</span>' +
         '</div>' +
         '<div class="ev-title">' + esc(ev.title) + '</div>' +
         '<div class="ev-date mono">' + dateLine(ev) + '</div>';
@@ -893,7 +950,34 @@
         openId = open ? null : ev.id;
         renderVertical();
       });
-      card.appendChild(toggle);
+
+      const aside = document.createElement('div');
+      aside.className = 'ev-aside';
+      const age = document.createElement('span');
+      age.className = 'ev-age mono';
+      age.textContent = 'Age ' + ageAt(ev.date);
+      aside.appendChild(age);
+
+      if (ev.photo) {
+        const thumb = document.createElement('button');
+        thumb.type = 'button';
+        thumb.className = 'ev-thumb';
+        thumb.setAttribute('aria-label', 'Open the photo for ' + ev.title);
+        const im = document.createElement('img');
+        im.alt = '';
+        thumb.appendChild(im);
+        thumb.addEventListener('click', function () { openPhoto(ev.photo); });
+        aside.appendChild(thumb);
+        photoThumbUrl(ev.photo).then(function (url) {
+          if (url) im.src = url; else thumb.remove();
+        }).catch(function () { thumb.remove(); });
+      }
+
+      const row = document.createElement('div');
+      row.className = 'ev-row';
+      row.appendChild(toggle);
+      row.appendChild(aside);
+      card.appendChild(row);
 
       if (open) {
         const more = document.createElement('div');
@@ -1050,6 +1134,67 @@
   // ── add form ───────────────────────────────────
   let fPrecision = 'day';
   let fCategory = 'home';
+  let fPhotoBlob = null;    // a newly chosen photo, not yet uploaded
+  let fPhotoName = null;    // the photo already on the event being edited
+  let fPhotoCleared = false;
+  let fPhotoPreviewUrl = null;
+
+  function renderPhotoField() {
+    const box = document.getElementById('photo-preview');
+    const clear = document.getElementById('photo-clear');
+    if (fPhotoPreviewUrl) { URL.revokeObjectURL(fPhotoPreviewUrl); fPhotoPreviewUrl = null; }
+    box.innerHTML = '';
+
+    if (fPhotoBlob) {
+      fPhotoPreviewUrl = URL.createObjectURL(fPhotoBlob);
+      const im = document.createElement('img');
+      im.alt = ''; im.src = fPhotoPreviewUrl;
+      box.appendChild(im);
+      clear.hidden = false;
+    } else if (fPhotoName && !fPhotoCleared) {
+      const im = document.createElement('img');
+      im.alt = '';
+      box.appendChild(im);
+      clear.hidden = false;
+      photoThumbUrl(fPhotoName).then(function (url) { if (url) im.src = url; });
+    } else {
+      const sp = document.createElement('span');
+      sp.textContent = 'No photo';
+      box.appendChild(sp);
+      clear.hidden = true;
+    }
+  }
+
+  function resetPhotoField() {
+    if (fPhotoPreviewUrl) { URL.revokeObjectURL(fPhotoPreviewUrl); fPhotoPreviewUrl = null; }
+    fPhotoBlob = null; fPhotoName = null; fPhotoCleared = false;
+    document.getElementById('f-photo').value = '';
+    renderPhotoField();
+  }
+
+  document.getElementById('photo-choose').addEventListener('click', function () {
+    document.getElementById('f-photo').click();
+  });
+
+  document.getElementById('photo-clear').addEventListener('click', function () {
+    fPhotoBlob = null;
+    fPhotoCleared = true;
+    document.getElementById('f-photo').value = '';
+    renderPhotoField();
+  });
+
+  document.getElementById('f-photo').addEventListener('change', async function () {
+    const file = this.files && this.files[0];
+    if (!file) return;
+    try {
+      fPhotoBlob = await shrinkImage(file, 1600);
+      fPhotoCleared = false;
+      renderPhotoField();
+    } catch (err) {
+      toast(err.message);
+      this.value = '';
+    }
+  });
 
   function renderDateInputs() {
     const box = document.getElementById('date-inputs');
@@ -1090,7 +1235,7 @@
     renderDateInputs();
   });
 
-  document.getElementById('add-form').addEventListener('submit', function (e) {
+  document.getElementById('add-form').addEventListener('submit', async function (e) {
     e.preventDefault();
     const title = document.getElementById('f-title').value.trim();
     if (!title) { toast('Give it a name first'); return; }
@@ -1109,22 +1254,42 @@
     const note = document.getElementById('f-note').value.trim();
     const location = document.getElementById('f-location').value.trim();
 
+    const ev = editingId
+      ? events.filter(function (x) { return x.id === editingId; })[0]
+      : { id: 'u' + Date.now() };
+
+    // Settle the photo before touching the event, so a failed upload leaves
+    // events.json describing a file that actually exists.
+    let photo = editingId ? ev.photo : undefined;
+    const submitBtn = document.getElementById('add-submit');
+    if (fPhotoBlob) {
+      const name = ev.id + '.jpg';
+      submitBtn.disabled = true;
+      toast('Uploading photo…');
+      try {
+        await uploadPhoto(name, fPhotoBlob);
+        delete photoUrls[name];
+        photo = name;
+      } catch (err) {
+        submitBtn.disabled = false;
+        toast(err.message);
+        return;
+      }
+      submitBtn.disabled = false;
+    } else if (fPhotoCleared && photo) {
+      deletePhoto(photo).catch(function () {});
+      photo = undefined;
+    }
+
+    ev.date = iso; ev.precision = fPrecision; ev.category = fCategory;
+    ev.title = title; ev.note = note; ev.location = location;
+    if (photo) ev.photo = photo; else delete ev.photo;
+
     if (editingId) {
-      const ev = events.filter(function (x) { return x.id === editingId; })[0];
-      ev.date = iso; ev.precision = fPrecision; ev.category = fCategory;
-      ev.title = title; ev.note = note; ev.location = location;
       openId = ev.id;
       selStation = ev.id;
     } else {
-      events.push({
-        id: 'u' + Date.now(),
-        date: iso,
-        precision: fPrecision,
-        category: fCategory,
-        title: title,
-        note: note,
-        location: location
-      });
+      events.push(ev);
     }
     save();
 
@@ -1174,6 +1339,10 @@
     document.getElementById('f-title').value = ev.title;
     document.getElementById('f-note').value = ev.note || '';
     document.getElementById('f-location').value = ev.location || '';
+    fPhotoBlob = null; fPhotoCleared = false;
+    fPhotoName = ev.photo || null;
+    document.getElementById('f-photo').value = '';
+    renderPhotoField();
     renderCatGrid();
     renderAddChrome();
     show('add');
@@ -1183,6 +1352,7 @@
     editingId = null;
     armedDelete = false;
     document.getElementById('add-form').reset();
+    resetPhotoField();
     fPrecision = 'day';
     fCategory = 'home';
     setPrecisionButtons();
@@ -1200,6 +1370,7 @@
     if (!armedDelete) { armedDelete = true; renderAddChrome(); return; }
     const ev = events.filter(function (x) { return x.id === editingId; })[0];
     const title = ev ? ev.title : 'Event';
+    if (ev && ev.photo) deletePhoto(ev.photo).catch(function () {});
     events = events.filter(function (x) { return x.id !== editingId; });
     if (openId === editingId) openId = null;
     if (selStation === editingId) selStation = null;
@@ -1330,6 +1501,41 @@
     if (saved) document.documentElement.setAttribute('data-theme', saved);
   } catch (e) {}
 
+  // ── photo viewer ───────────────────────────────
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightbox-img');
+  const lightboxMsg = document.getElementById('lightbox-msg');
+
+  function closePhoto() {
+    lightbox.hidden = true;
+    lightboxImg.removeAttribute('src');
+    lightboxImg.hidden = false;
+  }
+
+  async function openPhoto(name) {
+    lightbox.hidden = false;
+    lightboxImg.hidden = true;
+    lightboxMsg.hidden = false;
+    lightboxMsg.textContent = 'Loading…';
+    try {
+      const url = await photoFullUrl(name);
+      if (!url) throw new Error('not found');
+      lightboxImg.src = url;
+      lightboxImg.hidden = false;
+      lightboxMsg.hidden = true;
+    } catch (e) {
+      lightboxMsg.textContent = 'That photo could not be loaded.';
+    }
+  }
+
+  lightbox.addEventListener('click', closePhoto);
+  document.getElementById('lightbox-close').addEventListener('click', function (e) {
+    e.stopPropagation(); closePhoto();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !lightbox.hidden) closePhoto();
+  });
+
   // ── misc ───────────────────────────────────────
   let toastTimer = null;
   function toast(msg) {
@@ -1409,6 +1615,74 @@
     if (!res.ok) throw new Error('OneDrive write error ' + res.status);
   }
 
+  const PHOTO_DIR = 'photos';
+  const photoUrls = {};   // filename -> thumbnail url, cached per session
+
+  async function uploadPhoto(name, blob) {
+    const token = await getToken();
+    const res = await fetch(CONFIG.graphBase + '/me/drive/root:/' + APP_NAME + '/' + PHOTO_DIR + '/' + name + ':/content', {
+      method: 'PUT',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'image/jpeg' },
+      body: blob
+    });
+    if (!res.ok) throw new Error('Photo upload failed (' + res.status + ')');
+  }
+
+  async function deletePhoto(name) {
+    const token = await getToken();
+    await fetch(CONFIG.graphBase + '/me/drive/root:/' + APP_NAME + '/' + PHOTO_DIR + '/' + name, {
+      method: 'DELETE', headers: { Authorization: 'Bearer ' + token }
+    });
+    delete photoUrls[name];
+  }
+
+  // Graph hands back short-lived pre-authenticated URLs, so these drop straight
+  // into an <img> without an Authorization header.
+  async function photoThumbUrl(name) {
+    if (photoUrls[name]) return photoUrls[name];
+    const token = await getToken();
+    const res = await fetch(CONFIG.graphBase + '/me/drive/root:/' + APP_NAME + '/' + PHOTO_DIR + '/' + name + ':/thumbnails/0/small', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data || !data.url) return null;
+    photoUrls[name] = data.url;
+    return data.url;
+  }
+
+  async function photoFullUrl(name) {
+    const token = await getToken();
+    const res = await fetch(CONFIG.graphBase + '/me/drive/root:/' + APP_NAME + '/' + PHOTO_DIR + '/' + name + '?select=id,@microsoft.graph.downloadUrl', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data['@microsoft.graph.downloadUrl'] || null;
+  }
+
+  // Phone photos are far bigger than this needs; cap the long edge before upload.
+  function shrinkImage(file, maxEdge) {
+    return new Promise(function (resolve, reject) {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = function () {
+        URL.revokeObjectURL(url);
+        const scale = Math.min(1, maxEdge / Math.max(img.naturalWidth, img.naturalHeight));
+        const w = Math.max(1, Math.round(img.naturalWidth * scale));
+        const h = Math.max(1, Math.round(img.naturalHeight * scale));
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        c.toBlob(function (blob) {
+          blob ? resolve(blob) : reject(new Error('That image could not be read'));
+        }, 'image/jpeg', 0.85);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('That image could not be read')); };
+      img.src = url;
+    });
+  }
+
   function setSync(state) {
     const el = document.getElementById('sync');
     if (state === 'saving') { el.textContent = 'Saving…'; el.dataset.state = 'saving'; }
@@ -1423,6 +1697,7 @@
     document.getElementById('account-name').textContent = account.username || account.name || '';
     renderDateInputs();
     renderCatGrid();
+    renderPhotoField();
     renderAddChrome();
     renderAll();
     show('vertical');
