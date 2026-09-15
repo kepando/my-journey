@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="My Journey">
   <meta name="theme-color" content="#2F4B9B">
   <title>My Journey</title>
@@ -40,8 +40,8 @@
     --header-h: 56px;
     --nav-h: 64px;
 
-    /* iPad in standalone mode reports a zero top inset but still paints the
-       translucent status bar over the page, so floor it. */
+    /* With a non-translucent status bar iOS insets the web view itself, so this
+       only has to cover notches. See the status bar note in CLAUDE.md. */
     --safe-top: env(safe-area-inset-top, 0px);
 
     --shadow: 0 1px 2px rgba(22,32,43,.06), 0 6px 16px -8px rgba(22,32,43,.14);
@@ -93,11 +93,6 @@
     --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 16px -8px rgba(0,0,0,.6);
   }
 
-  @media (display-mode: standalone) {
-    :root { --safe-top: max(env(safe-area-inset-top, 0px), 32px); }
-  }
-  :root[data-standalone] { --safe-top: max(env(safe-area-inset-top, 0px), 32px); }
-
   html { height: 100%; }
   body {
     min-height: 100%;
@@ -123,6 +118,7 @@
     padding-right: max(16px, env(safe-area-inset-right));
     display: flex; align-items: center; gap: 12px;
     background: color-mix(in srgb, var(--surface) 88%, transparent);
+    -webkit-backdrop-filter: saturate(1.4) blur(12px);
     backdrop-filter: saturate(1.4) blur(12px);
     border-bottom: 1px solid var(--rule);
   }
@@ -187,6 +183,7 @@
     padding-bottom: env(safe-area-inset-bottom);
     display: flex; justify-content: space-around; align-items: center;
     background: color-mix(in srgb, var(--surface) 92%, transparent);
+    -webkit-backdrop-filter: saturate(1.4) blur(12px);
     backdrop-filter: saturate(1.4) blur(12px);
     border-top: 1px solid var(--rule);
   }
@@ -481,7 +478,7 @@
       flex-direction: column; justify-content: flex-start; align-items: stretch;
       gap: 4px; padding: calc(var(--header-h) + 20px) 14px 20px;
       border-top: none; border-right: 1px solid var(--rule);
-      backdrop-filter: none; background: var(--surface);
+      -webkit-backdrop-filter: none; backdrop-filter: none; background: var(--surface);
     }
     .nav-btn {
       flex-direction: row; justify-content: flex-start; gap: 11px;
@@ -495,14 +492,6 @@
     .view#view-rail { max-width: 940px; }
   }
 </style>
-
-<script>
-  // iOS home-screen launches don't always match (display-mode: standalone);
-  // navigator.standalone does. Runs before first paint so the header never jumps.
-  if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
-    document.documentElement.setAttribute('data-standalone', '');
-  }
-</script>
 </head>
 <body>
 
@@ -547,7 +536,7 @@
   <!-- ── Vertical timeline ── -->
   <section class="view" id="view-vertical">
     <p class="eyebrow">Birth to today</p>
-    <h1 class="view-title">Your life, in order</h1>
+    <h1 class="view-title">My life, in order</h1>
     <p class="view-lede" id="v-lede"></p>
 
     <div class="empty" id="empty" hidden>
@@ -707,7 +696,7 @@
 (function () {
   "use strict";
 
-  const LAST_UPDATED = '09/14/2026 09:29 PM PDT';
+  const LAST_UPDATED = '09/14/2026 09:41 PM PDT';
 
   const APP_NAME = 'MyJourney';
 

@@ -83,13 +83,17 @@ These actions are pre-approved:
 - `[hidden] { display: none !important; }` is load-bearing. Several elements that toggle
   with the `hidden` attribute also carry `display: flex`, which would otherwise win.
 - Bump `CACHE` in `service-worker.js` on each deploy to bust stale caches.
-- Top spacing goes through `--safe-top`, never `env(safe-area-inset-top)` directly. The
-  status bar is `black-translucent`, so the page draws under it, but iPad in standalone
-  mode reports a zero top inset — the header ends up beneath the clock. `--safe-top`
-  floors the inset at 32px when installed, triggered by both
-  `@media (display-mode: standalone)` and a `data-standalone` attribute that a head
-  script sets from `navigator.standalone` (iOS home-screen launches don't reliably match
-  the media query).
+- The status bar style is `default`, deliberately, **not** `black-translucent`. With
+  `black-translucent` the web view extends under the status bar and the page has to
+  reserve that space itself via `env(safe-area-inset-top)` — which iPad reports as zero
+  while still painting the status bar over the header. Detecting standalone mode to
+  compensate does not work either: iPadOS matches neither `(display-mode: standalone)`
+  nor `navigator.standalone` reliably. With `default`, iOS insets the web view and the
+  problem cannot occur. Don't switch it back for the sake of an edge-to-edge look
+  without testing on an iPad.
+- Top spacing still goes through `--safe-top` rather than `env(safe-area-inset-top)`
+  directly, so there is one knob if this ever needs adjusting.
+- `backdrop-filter` needs the `-webkit-` prefix alongside it for older Safari.
 
 ## Updating an installed copy
 
